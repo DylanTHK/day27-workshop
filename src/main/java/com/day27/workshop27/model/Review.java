@@ -1,9 +1,12 @@
 package com.day27.workshop27.model;
 
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.time.Instant;
-import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.bson.Document;
 import org.springframework.util.MultiValueMap;
 
 import jakarta.json.Json;
@@ -16,9 +19,12 @@ public class Review {
     private Integer rating;
     private String comment;
     private Integer id;
-
     private Timestamp postedDate; // generate
     private String gameName; // query from GameRepo
+    private Boolean isEdited = false;
+    private List<EditedComment> edited;
+    
+    public Review() {}
 
     public Review(MultiValueMap<String, String> form) {
         this.user = form.getFirst("name");
@@ -64,22 +70,63 @@ public class Review {
     public void setGameName(String gameName) {
         this.gameName = gameName;
     }
+    public Boolean getIsEdited() {
+        return isEdited;
+    }
+    public void setIsEdited(Boolean isEdited) {
+        this.isEdited = isEdited;
+    }
+    public List<EditedComment> getEdited() {
+        return edited;
+    }
+    public void setEdited(List<EditedComment> edited) {
+        this.edited = edited;
+    }
+
     @Override
     public String toString() {
         return "Review [user=" + user + ", rating=" + rating + ", comment=" + comment + ", id=" + id + ", postedDate="
-                + postedDate + ", gameName=" + gameName + "]";
+                + postedDate + ", gameName=" + gameName + ", isEdited=" + isEdited + ", edited=" + edited + "]";
     }
 
-    public JsonObject toJson() {
-        JsonObject jObj = Json.createObjectBuilder()
+    // method to convert POJO to Json for a)
+    public JsonObjectBuilder toJson() {
+        JsonObjectBuilder jObj = Json.createObjectBuilder()
             .add("user", this.getUser())
             .add("rating", this.getRating())
             .add("comment", this.getComment())
             .add("ID", this.getId())
             .add("posted", this.getPostedDate().toString())
-            .add("name", this.getGameName())
-            .build();
+            .add("name", this.getGameName());
+            
         return jObj;
+    }
+
+    // user, rating, comment, id, postedDate, 
+    // gameName, isEdited, List<EditedComment> edited;
+    public static Review create(Document d) throws ParseException {
+        Review r = new Review();
+        r.setUser(d.getString("user"));
+        r.setRating(d.getInteger("rating"));
+        r.setComment(d.getString("comment"));
+        r.setId(d.getInteger("ID"));
+        r.setPostedDate(Timestamp.valueOf(d.getString("posted")));
+        // r.setPostedDate(convertStringtoTimeStamp(d.getString("posted")));
+        r.setGameName(d.getString("name"));
+        // creating list from list of documents
+        List<EditedComment> listEdited = new LinkedList<>();
+        List<Document> dList = d.getList("edited", Document.class);
+
+        if (null != dList) {
+            for (Document doc : dList) {
+                // System.out.println("List of Documents: " + doc); //REMOVE
+                listEdited.add(EditedComment.create(doc));
+            }
+            r.setIsEdited(true);
+            r.setEdited(listEdited);
+        }
+        System.out.println("\n\nCreated Review: " + r);
+        return r;
     }
 
 }

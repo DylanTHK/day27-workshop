@@ -1,10 +1,13 @@
 package com.day27.workshop27.controller;
 
+import java.text.ParseException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -21,6 +24,10 @@ import jakarta.json.JsonObject;
 @RequestMapping(path="/review")
 public class ReviewRestController {
     
+    private final String MESSAGE_BAD_REQUEST = """
+                {"error": "Invalid ID",
+                "error type": "Bad Request"}
+                """;
 
     @Autowired
     private ReviewService reviewSvc;
@@ -53,20 +60,54 @@ public class ReviewRestController {
     public ResponseEntity<String> updateReview(
         @PathVariable String reviewId, 
         @RequestBody String editedReview) {
-        
-        System.out.println("Detected review ID: " + reviewId);
 
         Integer result = reviewSvc.editReviewById(editedReview, reviewId);
-        
         if (result == 1) {
             return new ResponseEntity<>("Updated review %s".formatted(reviewId), HttpStatus.OK);
         } else {
-            // TODO check why unable to invoke not found response
             return new ResponseEntity<>("Id not found", HttpStatus.BAD_REQUEST);
         }
     }
 
-    // c)
-    
+    // c) get request to retrieve lastest info for review by ID
+    @GetMapping(path="/{reviewId}", produces=MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+    public ResponseEntity<String> getLatestReviewById(@PathVariable String reviewId) throws ParseException {
+        // query service for json
+
+        String result = reviewSvc.getLatestCommentById(reviewId);
+
+        if (null != result) {
+            return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(result);
+        } else {
+            // json formatted string
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MESSAGE_BAD_REQUEST);
+        }
+    }
+
+    // d) get all details of comment with all edits
+    @GetMapping(path="/{_id}/history", produces=MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> method(@PathVariable String _id) {
+        System.out.println("Received String _id: " + _id);
+        
+        String result = reviewSvc.getHistoryById(_id);
+        if (null != result) {
+            return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(result);
+        } else {
+
+            return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(MESSAGE_BAD_REQUEST);
+        }
+    }
+
 
 }

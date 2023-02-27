@@ -39,8 +39,19 @@ public class ReviewRepo {
     // });
     public Integer editReview(Document edit, String id) {
         System.out.println("Entered editReview");
+        // check if id exists
+        ObjectId objId; 
+        try {
+            objId = new ObjectId(id);
+            System.out.println("Obj ID: " + objId);
+        } catch(IllegalArgumentException e) {
+            e.getMessage();
+            return 0;
+        }
+
         // find document by id
-        Query query = Query.query(Criteria.where("_id").is(new ObjectId(id)));
+        Query query = Query.query(Criteria.where("_id").is(objId));
+        System.out.println("ReviewRepo >>> Query passed: " + query);
         Update updateOps = new Update().push("edited").each(edit);
 
         UpdateResult updateResult = mongoTemplate.updateFirst(query, updateOps, Document.class, COLLECTION_REVIEW);
@@ -50,5 +61,14 @@ public class ReviewRepo {
 
         // return results of update (1 = matched, 0 = not found)
         return (int) updateResult.getMatchedCount();
+    }
+
+    // db.review.find({
+    //     _id: ObjectId("63fac578c701042afa618e62")
+    // });
+    public Document getReviewById(String id) {
+        ObjectId mongoId = new ObjectId(id);
+        Document review = mongoTemplate.findById(mongoId, Document.class, COLLECTION_REVIEW);
+        return review;
     }
 }
