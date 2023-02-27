@@ -10,7 +10,6 @@ import org.bson.Document;
 import org.springframework.util.MultiValueMap;
 
 import jakarta.json.Json;
-import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
 
 public class Review {
@@ -98,7 +97,6 @@ public class Review {
             .add("ID", this.getId())
             .add("posted", this.getPostedDate().toString())
             .add("name", this.getGameName());
-            
         return jObj;
     }
 

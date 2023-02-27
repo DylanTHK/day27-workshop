@@ -26,7 +26,7 @@ public class ReviewRepo {
     //     id: 1,
     //     posted: "date",
     //     name: "Die Macher" 
-    // })
+    // });
     public Document insertReview(Document doc) {
         Document result = mongoTemplate.insert(doc, COLLECTION_REVIEW);
         return result;
